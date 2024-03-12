@@ -3,7 +3,7 @@ const app = express()
 const cors = require("cors")
 const port = process.env.PORT || 3000
 require("dotenv").config()
-const { MongoClient, ServerApiVersion } = require("mongodb")
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb")
 const uri = process.env.DB_URL
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -35,11 +35,42 @@ async function run() {
       }
     })
 
+    app.patch("/update-job/:id", async (req, res) => {
+      const id = req.params.id
+      const data = req.body
+      const filter = {_id: new ObjectId(id)}
+      const options = {upsert: true}
+      const updateDoc  = {
+        $set: { ...data }
+      }
+      const result = await jobsCollection.updateOne(filter, updateDoc, options)
+      res.send(result)
+    })
+
     app.get("/all-jobs", async (req, res) => {
       const jobs = await jobsCollection.find({}).toArray()
       res.send(jobs)
     })
-    // Send a ping to confirm a successful connection
+
+    app.get("/edit-job/:id", async (req, res) => {
+      const id = req.params.id;
+      const job = await jobsCollection.findOne({_id: new ObjectId(id)})
+      res.send(job)
+    })
+
+    app.get("/my-jobs/:email", async(req,res)=> {
+      const jobs = await jobsCollection.find({jobPostedBy: req.params.email}).toArray()
+      res.send(jobs)
+    })
+
+
+    app.delete("/job/:id", async(req, res) => {
+      var jobId = req.params.id;
+      jobId = {_id: new ObjectId(jobId)}
+      const result = await jobsCollection.deleteOne(jobId)
+      res.send(result)
+    })
+        // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 })
     console.log("Pinged your deployment. You successfully connected to MongoDB!")
   } finally {
