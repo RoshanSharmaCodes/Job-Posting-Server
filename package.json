@@ -14,6 +14,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.3",
     "mongodb": "6.4",
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "short-uuid": "^5.2.0"
   }
 }

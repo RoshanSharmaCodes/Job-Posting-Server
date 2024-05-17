@@ -4,6 +4,10 @@ const cors = require("cors")
 const port = process.env.PORT || 3000
 require("dotenv").config()
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb")
+const userApp = require("./Routes/userRoute")
+const commonApp = require("./Routes/commonRoute")
+const subscribeApp = require("./Routes/subscribeRoute")
+const jobApp = require("./Routes/jobRoutes")
 const uri = process.env.DB_URL
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -13,64 +17,20 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 })
+
+var subsCollection
+var profilesCollection
+var jobsCollection
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect()
     const db = client.db("job-posting")
     await client.db("admin").command({ ping: 1 })
-    const jobsCollection = db.collection("jobs")
+    jobsCollection = db.collection("jobs")
+    subsCollection = db.collection("Newsletter")
+    profilesCollection = db.collection("Profiles")
 
-    app.post("/post-job", async (req, res) => {
-      const body = req.body
-      body.createAt = new Date()
-      const result = await jobsCollection.insertOne(body)
-      if(result.insertedId){
-        return res.status(200).send(result)
-      }else{
-        return res.status(404).send({
-          message:"Something went wrong! Not Able to Insert Data",
-          status: false
-        })
-      }
-    })
-
-    app.patch("/update-job/:id", async (req, res) => {
-      const id = req.params.id
-      const data = req.body
-      const filter = {_id: new ObjectId(id)}
-      const options = {upsert: true}
-      const updateDoc  = {
-        $set: { ...data }
-      }
-      const result = await jobsCollection.updateOne(filter, updateDoc, options)
-      res.send(result)
-    })
-
-    app.get("/all-jobs", async (req, res) => {
-      const jobs = await jobsCollection.find({}).toArray()
-      res.send(jobs)
-    })
-
-    app.get("/edit-job/:id", async (req, res) => {
-      const id = req.params.id;
-      const job = await jobsCollection.findOne({_id: new ObjectId(id)})
-      res.send(job)
-    })
-
-    app.get("/my-jobs/:email", async(req,res)=> {
-      const jobs = await jobsCollection.find({jobPostedBy: req.params.email}).toArray()
-      res.send(jobs)
-    })
-
-
-    app.delete("/job/:id", async(req, res) => {
-      var jobId = req.params.id;
-      jobId = {_id: new ObjectId(jobId)}
-      const result = await jobsCollection.deleteOne(jobId)
-      res.send(result)
-    })
-        // Send a ping to confirm a successful connection
+    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 })
     console.log("Pinged your deployment. You successfully connected to MongoDB!")
   } finally {
@@ -85,6 +45,21 @@ app.use(cors())
 
 app.get("/", (req, res) => {
   res.send("Hello Developer")
+})
+
+app.use("/User", (req, res, next) => {
+  req.profilesCollection = profilesCollection
+  userApp(req, res, next)
+})
+
+app.use("/Jobs", (req, res, next) => {
+  req.jobsCollection = jobsCollection
+  req.profilesCollection = profilesCollection
+  jobApp(req, res, next)
+})
+app.use("/Subscribe", (req, res, next) => {
+  req.subsCollection = subsCollection // Pass subsCollection to request object
+  subscribeApp(req, res, next)
 })
 
 app.listen(port, () => {
