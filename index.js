@@ -8,37 +8,47 @@ const userApp = require("./Routes/userRoute")
 const commonApp = require("./Routes/commonRoute")
 const subscribeApp = require("./Routes/subscribeRoute")
 const jobApp = require("./Routes/jobRoutes")
-const uri = process.env.DB_URL
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-})
 
 var subsCollection
 var profilesCollection
 var jobsCollection
+
+// Connection URL
+const uri = process.env.DB_CONNECTION_STRING
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000 // Set timeout to 30 seconds
+});
+
 async function run() {
   try {
-    await client.connect()
-    const db = client.db("job-posting")
-    await client.db("admin").command({ ping: 1 })
-    jobsCollection = db.collection("jobs")
-    subsCollection = db.collection("Newsletter")
-    profilesCollection = db.collection("Profiles")
+    // Connect the client to the server
+    await client.connect();
+    
+    // Establish and verify connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 })
-    console.log("Pinged your deployment. You successfully connected to MongoDB!")
+    // Get database and collections
+    const db = client.db("job-posting");
+    const jobsCollection = db.collection("jobs");
+    const subsCollection = db.collection("Newsletter");
+    const profilesCollection = db.collection("Profiles");
+
+    // Use the collections as needed
+    // e.g., const jobs = await jobsCollection.find({}).toArray();
+
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error);
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
+    await client.close();
   }
 }
-run().catch(console.dir)
+
+run().catch(console.dir);
 
 app.use(express.json())
 
