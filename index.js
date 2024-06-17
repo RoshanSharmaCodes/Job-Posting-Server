@@ -60,6 +60,7 @@ app.use(
 )
 
 app.get("/", (req, res) => {
+  run()
   res.send("Hello Developer")
 })
 
