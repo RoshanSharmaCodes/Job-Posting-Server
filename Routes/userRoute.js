@@ -35,19 +35,23 @@ userApp.post("/SignUp", async (req, res) => {
 })
 
 userApp.post("/Login", async (req, res) => {
-  var profilesCollection = req.profilesCollection
-  var email = req.body.emailId
-  var password = req.body.password
-  var entry = await profilesCollection.findOne({ emailId: email })
-  var checkPass = password == entry.password
-  if (entry) {
-    if (checkPass) {
-      res.status(200).send(entry)
+  try{
+    var profilesCollection = req.profilesCollection
+    var email = req.body.emailId
+    var password = req.body.password
+    var entry = await profilesCollection.findOne({ emailId: email })
+    var checkPass = password == entry.password
+    if (entry) {
+      if (checkPass) {
+        res.status(200).send(entry)
+      } else {
+        res.status(404).send({ message: "Wrong Password for Email Id" })
+      }
     } else {
-      res.status(404).send({ message: "Wrong Password for Email Id" })
+      res.status(404).send({ message: "Entry not found for the provided emailId" })
     }
-  } else {
-    res.status(404).send({ message: "Entry not found for the provided emailId" })
+  } catch(err){
+    res.status(500).send({message: err.message})
   }
 })
 

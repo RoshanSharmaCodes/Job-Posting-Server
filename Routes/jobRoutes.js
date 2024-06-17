@@ -334,4 +334,26 @@ jobApp.delete("/job/:id", async (req, res) => {
   res.send(result)
 })
 
+jobApp.post('/applied-jobs', async (req, res) => {
+  var jobsCollection = req.jobsCollection
+  try {
+    const jobIDs = req.body.jobData;
+
+    // Validate input
+    if (!Array.isArray(jobIDs) || jobIDs.length === 0) {
+      return res.status(400).json({ error: 'jobData must be a non-empty array.' });
+    }
+    
+    // Fetch jobs matching the provided job IDs
+    var jobs = await jobsCollection.find({ jobId: { $in : jobIDs }}).toArray();
+
+    // Return the found jobs
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while fetching jobs.' });
+  }
+});
+
+
 module.exports = jobApp

@@ -41,7 +41,23 @@ async function run() {
 run().catch(console.dir)
 
 app.use(express.json())
-app.use(cors())
+
+const allowedOrigin = ["https://job-posting-woad.vercel.app/"]
+
+// Enable CORS with custom configuration
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true)
+
+      if (allowedOrigin.indexOf(origin) === -1) {
+        const msg = "The CORS policy for this site does not allow access from the specified origin."
+        return callback(new Error(msg), false)
+      }
+      return callback(null, true)
+    },
+  })
+)
 
 app.get("/", (req, res) => {
   res.send("Hello Developer")
