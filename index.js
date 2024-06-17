@@ -42,14 +42,14 @@ run().catch(console.dir)
 
 app.use(express.json())
 
-const allowedOrigin = ["https://job-posting-woad.vercel.app/"]
+const allowedOrigin = ["https://job-posting-woad.vercel.app","http://localhost:3000"]
 
 // Enable CORS with custom configuration
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true)
-
+        console.log("Origin of API", origin)
       if (allowedOrigin.indexOf(origin) === -1) {
         const msg = "The CORS policy for this site does not allow access from the specified origin."
         return callback(new Error(msg), false)
